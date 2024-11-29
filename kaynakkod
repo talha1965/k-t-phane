@@ -1,0 +1,143 @@
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+
+namespace ConsoleApp18
+{
+    internal class Program
+    {
+        static List<Kitap> kitaplar = new List<Kitap>();
+        static List<Kiralama> kiralamalar = new List<Kiralama>();
+        static void Main(string[] args)
+        {
+
+            while (true)
+            {
+                Console.WriteLine("1. Kitap Ekle");
+                Console.WriteLine("2. Kitap Kirala");
+                Console.WriteLine("3. Kitap İade");
+                Console.WriteLine("4. Kitap Ara");
+                Console.WriteLine("5. Raporlama");
+                Console.WriteLine("6. Çıkış");
+                Console.Write("Seçiminiz: ");
+                int secim = int.Parse(Console.ReadLine());
+
+                if (secim == 1) KitapEkle();
+                else if (secim == 2) KitapKirala();
+                else if (secim == 3) KitapIade();
+                else if (secim == 4) KitapAra();
+                else if (secim == 5) Raporlama();
+                else if (secim == 6) break;
+            }
+        }
+
+        static void KitapEkle()
+        {
+            Console.Write("Kitap Adı: ");
+            string ad = Console.ReadLine();
+            Console.Write("Yazar Adı: ");
+            string yazar = Console.ReadLine();
+            Console.Write("Yayın Yılı: ");
+            int yil = int.Parse(Console.ReadLine());
+            Console.Write("Adet: ");
+            int adet = int.Parse(Console.ReadLine());
+
+            var mevcutKitap = kitaplar.Find(k => k.Ad == ad && k.Yazar == yazar);
+            if (mevcutKitap != null) mevcutKitap.Adet += adet;
+            else kitaplar.Add(new Kitap { Ad = ad, Yazar = yazar, Yil = yil, Adet = adet });
+        }
+
+        static void KitapKirala()
+        {
+            if (kitaplar.Count == 0) { Console.WriteLine("Kütüphanede kitap yok."); return; }
+            foreach (var k in kitaplar) Console.WriteLine($"{k.Ad}, {k.Yazar}, {k.Yil}, {k.Adet} adet");
+
+            Console.Write("Kiralanacak kitap adı: ");
+            string ad = Console.ReadLine();
+            var secilenKitap = kitaplar.Find(k => k.Ad == ad);
+
+            if (secilenKitap == null || secilenKitap.Adet == 0) { Console.WriteLine("Stokta yeterli kitap yok."); return; }
+            Console.Write("Kaç gün kiralamak istiyorsunuz: ");
+            int gun = int.Parse(Console.ReadLine());
+            Console.Write("Bütçeniz: ");
+            int butce = int.Parse(Console.ReadLine());
+            int toplamUcret = gun * 5;
+
+            if (butce < toplamUcret) { Console.WriteLine("Bütçeniz yetersiz."); return; }
+
+            Console.Write("Kiralayanın Adı: ");
+            string kullanici = Console.ReadLine();
+            secilenKitap.Adet--;
+            kiralamalar.Add(new Kiralama { Kullanici = kullanici, Kitap = secilenKitap, Sure = gun, IadeTarihi = DateTime.Now.AddDays(gun) });
+        }
+
+        static void KitapIade()
+        {
+            Console.Write("İade edilecek kitap adı: ");
+            string ad = Console.ReadLine();
+            var kiralananKitap = kiralamalar.Find(k => k.Kitap.Ad == ad);
+
+            if (kiralananKitap == null) { Console.WriteLine("Kiralama kaydı bulunamadı."); return; }
+            kiralamalar.Remove(kiralananKitap);
+            kiralananKitap.Kitap.Adet++;
+        }
+
+        static void KitapAra()
+        {
+            Console.Write("1. Kitap Adına Göre Ara\n2. Yazara Göre Ara\nSeçim: ");
+            int secim = int.Parse(Console.ReadLine());
+            Console.Write("Arama terimi: ");
+            string arama = Console.ReadLine();
+
+            List<Kitap> sonuc = secim == 1 ? kitaplar.FindAll(k => k.Ad.Contains(arama)) : kitaplar.FindAll(k => k.Yazar.Contains(arama));
+            foreach (var k in sonuc) Console.WriteLine($"{k.Ad}, {k.Yazar}, {k.Yil}, {k.Adet} adet");
+        }
+
+        static void Raporlama()
+        {
+            Console.WriteLine("1. Tüm Kitaplar");
+            Console.WriteLine("2. Yazara Göre Kitaplar");
+            Console.WriteLine("3. Yayın Yılına Göre Kitaplar");
+            Console.WriteLine("4. Kirada Olan Kitaplar");
+            Console.Write("Seçim: ");
+            int secim = int.Parse(Console.ReadLine());
+
+            if (secim == 1) foreach (var k in kitaplar) Console.WriteLine($"{k.Ad}, {k.Yazar}, {k.Yil}, {k.Adet} adet");
+            else if (secim == 2)
+            {
+                Console.Write("Yazar Adı: ");
+                string yazar = Console.ReadLine();
+                foreach (var k in kitaplar.FindAll(k => k.Yazar == yazar)) Console.WriteLine($"{k.Ad}, {k.Yazar}, {k.Yil}, {k.Adet} adet");
+            }
+            else if (secim == 3)
+            {
+                Console.Write("Yayın Yılı: ");
+                int yil = int.Parse(Console.ReadLine());
+                foreach (var k in kitaplar.FindAll(k => k.Yil == yil)) Console.WriteLine($"{k.Ad}, {k.Yazar}, {k.Yil}, {k.Adet} adet");
+            }
+            else if (secim == 4)
+            {
+                foreach (var k in kiralamalar) Console.WriteLine($"{k.Kitap.Ad}, {k.Kullanici}, İade Tarihi: {k.IadeTarihi}");
+            }
+        }
+    }
+
+    class Kitap
+    {
+        public string Ad { get; set; }
+        public string Yazar { get; set; }
+        public int Yil { get; set; }
+        public int Adet { get; set; }
+    }
+
+    class Kiralama
+    {
+        public string Kullanici { get; set; }
+        public Kitap Kitap { get; set; }
+        public int Sure { get; set; }
+        public DateTime IadeTarihi { get; set; }
+    }
+}
+
